@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Asistencia Campus Semana Santa 26</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; background-color: #f8fafc; color: #1e293b; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .header { border-bottom: 3px solid #3b82f6; margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        h2 { color: #1e3a8a; margin: 0; font-size: 1.4em; }
+        .player-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid #e2e8f0; }
+        .player-row:hover { background: #eff6ff; }
+        .controls { margin-top: 25px; display: flex; gap: 8px; }
+        input[type="text"] { flex-grow: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; }
+        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-add { background: #10b981; color: white; }
+        .btn-add:hover { background: #059669; }
+        .btn-confirm { background: #3b82f6; color: white; width: 100%; margin-top: 20px; font-size: 1.1em; padding: 15px; }
+        .btn-confirm:hover { background: #2563eb; }
+        input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #3b82f6; }
+        #fecha { font-size: 0.9em; color: #64748b; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <h2>Campus Semana Santa 26</h2>
+        <span id="fecha"></span>
+    </div>
+
+    <div id="lista-alumnos">
+        </div>
+
+    <div class="controls">
+        <input type="text" id="nuevo-jugador" placeholder="Nombre de nuevo jugador...">
+        <button class="btn-add" onclick="agregarJugador()">Añadir</button>
+    </div>
+
+    <button class="btn-confirm" onclick="confirmarAsistencia()">CONFIRMAR Y ENVIAR REPORTE</button>
+</div>
+
+<script>
+    // Alumnos detectados en INSCRIPCIONES (Febrero y Marzo) vinculados a Campus SS 26
+    const alumnosBase = [
+        "David Navarro Rodríguez",
+        "Matteo Luchoro Hernández",
+        "Álvaro González León",
+        "David Navarro",
+        "Nicole Emmanuelle Sosa Marrero",
+        "Chloe del Carmen Sosa Marrero"
+    ];
+
+    let alumnos = [];
+    const listaDiv = document.getElementById('lista-alumnos');
+    document.getElementById('fecha').innerText = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    function cargarDatos() {
+        const guardados = JSON.parse(localStorage.getItem('asistencia_campus_ss26_v2'));
+        // Si hay caché usamos esa, si no, la base filtrada de los archivos
+        alumnos = (guardados && guardados.length > 0) ? guardados : [...new Set(alumnosBase)];
+        renderizar();
+    }
+
+    function renderizar() {
+        listaDiv.innerHTML = '';
+        alumnos.sort().forEach((nombre, index) => {
+            const row = document.createElement('div');
+            row.className = 'player-row';
+            row.innerHTML = `
+                <span>${nombre}</span>
+                <input type="checkbox" id="check-${index}">
+            `;
+            listaDiv.appendChild(row);
+        });
+    }
+
+    function agregarJugador() {
+        const input = document.getElementById('nuevo-jugador');
+        const nombre = input.value.trim();
+        if (nombre !== "") {
+            alumnos.push(nombre);
+            localStorage.setItem('asistencia_campus_ss26_v2', JSON.stringify(alumnos));
+            renderizar();
+            input.value = "";
+        }
+    }
+
+    function confirmarAsistencia() {
+        let presentes = [];
+        let ausentes = [];
+
+        alumnos.forEach((nombre, index) => {
+            const cb = document.getElementById(`check-${index}`);
+            if (cb.checked) presentes.push(nombre);
+            else ausentes.push(nombre);
+        });
+
+        const fechaStr = new Date().toLocaleDateString();
+        const asunto = `ASISTENCIA CAMPUS SS26 - ${fechaStr}`;
+        const cuerpo = `REPORTE DE ASISTENCIA%0D%0AFecha: ${fechaStr}%0D%0A%0D%0APRESENTES (${presentes.length}):%0D%0A- ${presentes.join('%0D%0A- ')}%0D%0A%0D%0AAUSENTES (${ausentes.length}):%0D%0A- ${ausentes.join('%0D%0A- ')}`;
+        
+        window.location.href = `mailto:asmarriv1986@gmail.com?subject=${asunto}&body=${cuerpo}`;
+        alert("Reporte generado. Se abrirá tu correo.");
+    }
+
+    window.onload = cargarDatos;
+</script>
+
+</body>
+</html>
+
